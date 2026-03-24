@@ -124,7 +124,7 @@ class Agent :
 
                 self.optimize(mini_batch , policy , target_dqn)
 
-            if steps > self.network_sync_rate:
+            if is_Training and steps > self.network_sync_rate:
                 target_dqn.load_state_dict(policy.state_dict())
                 steps = 0
 
