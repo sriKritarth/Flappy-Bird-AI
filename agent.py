@@ -84,7 +84,7 @@ class Agent :
                 # Next action:
                 # (feed the observation to your agent here)
 
-                if is_Training and random.random < epsilon :
+                if is_Training and random.random() < epsilon :
                     action = env.action_space.sample() #explore
                     action = torch.tensor(action , dtype=torch.long , device= device)
 
@@ -105,9 +105,8 @@ class Agent :
                 state = next_state
                 
 
-            print(f"Episode = {episode + 1} with total_rewards = {ep_rewards} & epsilon = {epsilon}")
-
             if is_Training :
+                print(f"Episode = {episode + 1} with total_rewards = {ep_rewards} & epsilon = {epsilon}")
                 epsilon = max(epsilon * self.epsilon_dacay , self.epsilon_min)
                 # Checking if the player is still alive
 
@@ -139,18 +138,19 @@ class Agent :
         reward = torch.stack(reward)
         termination = torch.tensor(termination).float().to(device)
 
+        
+
         with torch.no_grad():
             target_q = reward + (1 - termination) * self.gamma * target_dqn(next_state).max(dim = 1)[0]
 
 
+        current_q = policy(state).gather(dim = 1 , index = action.unsqueeze(dim = 1)).squeeze()
 
-            current_q = policy(state).gather(dim = 1 , index = action.unsqueeze(dim = 1)).squeeze()
+        loss = self.loss_fn(current_q , target_q)
 
-            loss = self.loss_fn(current_q , target_q)
-
-            self.optim.zero_grad()
-            loss.backward()
-            self.optim.step()
+        self.optim.zero_grad()
+        loss.backward()
+        self.optim.step()
 
 
 
